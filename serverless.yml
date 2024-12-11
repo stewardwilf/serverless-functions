@@ -1,0 +1,132 @@
+service: serverless-functions
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-west-2
+  memorySize: 128
+  timeout: 10
+  environment:
+    DB_USER: ${ssm:/textract/DB_USER}
+    DB_HOST: ${ssm:/textract/DB_HOST}
+    DB_NAME: ${ssm:/textract/DB_NAME}
+    DB_PASSWORD: ${ssm:/textract/DB_PASSWORD}
+    DB_PORT: ${ssm:/textract/DB_PORT}
+    BUCKET_NAME: uploaded-passport-images
+
+functions:
+  analyzeTextract:
+    handler: src/services/invokeTextraction/handler/invokeTextraction.handler
+    events:
+      - s3:
+          bucket: uploaded-passport-images
+          event: s3:ObjectCreated:Put
+          existing: true
+    role: LambdaExecutionRole
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "textract:AnalyzeDocument"
+        Resource: "*"
+    timeout: 10
+
+  
+  uploadImage:
+    handler: src/services/uploadImage/handler/uploadImage.handler
+    events:
+      - http:
+          path: upload
+          method: post
+          cors: true
+    role: LambdaExecutionRole
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "s3:PutObject"
+        Resource:
+          - "arn:aws:s3:::uploaded-passport-images/*"
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-plugin-existing-s3
+
+resources:
+  Resources:
+    LambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service: "lambda.amazonaws.com"  #
+              Action: "sts:AssumeRole"
+        Policies:
+          - PolicyName: "UploadImageRole"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "s3:PutObject"  
+                  Resource:
+                    - "arn:aws:s3:::uploaded-passport-images/*"
+                - Effect: "Allow"
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource: "*"           
+          - PolicyName: "TextractLambdaRole"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: "Allow"
+                  Action:
+                    - "s3:GetObject"  
+                  Resource:
+                    - "arn:aws:s3:::uploaded-passport-images/*"
+                - Effect: "Allow"
+                  Action:
+                    - "textract:AnalyzeDocument"  
+                  Resource: "*"
+                - Effect: "Allow"
+                  Action:
+                    - "rds:ExecuteStatement"
+                  Resource: "*"      
+                - Effect: "Allow"
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource: "*"            
+
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${ssm:/textract/BUCKET_NAME}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: false
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+    S3BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref S3Bucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: "s3:GetObject"
+              Resource: "arn:aws:s3:::${ssm:/textract/BUCKET_NAME}/*"
+
+defaults:
+  deploy:
+    memorySize: 512
+    timeout: 30
