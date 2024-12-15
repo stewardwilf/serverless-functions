@@ -9,11 +9,8 @@ provider:
   memorySize: 128
   timeout: 10
   environment:
-    DB_USER: ${ssm:/textract/DB_USER}
-    DB_HOST: ${ssm:/textract/DB_HOST}
     DB_NAME: ${ssm:/textract/DB_NAME}
-    DB_PASSWORD: ${ssm:/textract/DB_PASSWORD}
-    DB_PORT: ${ssm:/textract/DB_PORT}
+    DB_CONNECTION_STRING: ${ssm:/textract/DB_CONNECTION_STRING}
     BUCKET_NAME: uploaded-passport-images
 
 functions:
@@ -62,7 +59,7 @@ resources:
           Statement:
             - Effect: "Allow"
               Principal:
-                Service: "lambda.amazonaws.com"  #
+                Service: "lambda.amazonaws.com"
               Action: "sts:AssumeRole"
         Policies:
           - PolicyName: "UploadImageRole"

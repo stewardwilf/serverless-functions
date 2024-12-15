@@ -17,7 +17,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             };
         }
 
-        const { imageBase64 } = body;
+        const { imageBase64, nationality } = body;
 
         // Decode the base64 string to a binary buffer
         const imageBuffer = Buffer.from(imageBase64, "base64");
@@ -28,6 +28,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             Key: fileName,
             Body: imageBuffer,
             ContentType: "image/jpeg", // Adjust ContentType based on your image type
+            Metadata: {
+                'passportNationality': nationality
+            }
         };
 
         // Upload the image to S3
