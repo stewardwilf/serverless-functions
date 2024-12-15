@@ -71,7 +71,6 @@ export const convertBlocksToKV = (blocks) => {
 }
 
 export const findMatchingValue = (obj, pattern) => {
-    console.log('obj', obj)
     // Create a regex that matches the pattern (case insensitive, can handle extra spaces, and numbers in parentheses)
     const regex = new RegExp(pattern.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/\s+/g, '\\s*'), 'i');
     

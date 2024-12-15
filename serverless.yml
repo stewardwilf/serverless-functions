@@ -11,7 +11,8 @@ provider:
   environment:
     DB_NAME: ${ssm:/textract/DB_NAME}
     DB_CONNECTION_STRING: ${ssm:/textract/DB_CONNECTION_STRING}
-    BUCKET_NAME: uploaded-passport-images
+    DB_TABLE_NAME: ${ssm:/textract/DB_TABLE_NAME}
+    BUCKET_NAME: ${ssm:/textract/BUCKET_NAME}
 
 functions:
   analyzeTextract:
@@ -28,7 +29,6 @@ functions:
           - "textract:AnalyzeDocument"
         Resource: "*"
     timeout: 10
-
   
   uploadImage:
     handler: src/services/uploadImage/handler/uploadImage.handler
