@@ -15,23 +15,18 @@ module.exports = [
         ecmaVersion: "latest",
         sourceType: "module",
         ecmaFeatures: {
-          jsx: true
+          jsx: false
         },
-        project: "./tsconfig.json" // Ensure this path matches your tsconfig.json location
       }
     },
     plugins: {
       "@typescript-eslint": eslintPluginTypescript,
-      react: eslintPluginReact,
       prettier: eslintPluginPrettier,
       import: eslintPluginImport,
-      "jsx-a11y": eslintPluginJsxA11y
     },
     rules: {
       "prettier/prettier": "error",
       "@typescript-eslint/no-unused-vars": "warn",
-      "react/react-in-jsx-scope": "off",
-      "react/prop-types": "off",
       "import/order": [
         "error",
         {

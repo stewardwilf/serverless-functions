@@ -1,8 +1,8 @@
 // src/types/fieldMappings.ts
 
 export interface FieldMapping {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   dob: string;
   nationality: string;
   pob: string;

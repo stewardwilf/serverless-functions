@@ -102,30 +102,30 @@ const getFieldValuesByNationality = (
   extractedKeyValuePairs: {},
   passportNationality: string
 ): {
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   dob: string;
   nationality: string;
   pob: string;
 } => {
   const nationalityFieldMapping: NationalityFieldMapping = {
     UK: {
-      first_name: 'Given names',
-      last_name: 'Surname',
+        firstName: 'Given names',
+        lastName: 'Surname',
       dob: 'Date of birth',
       nationality: 'Nationality',
       pob: 'Place of birth',
     },
     US: {
-      first_name: 'First Name',
-      last_name: 'Last Name',
+        firstName: 'First Name',
+        lastName: 'Last Name',
       dob: 'Date of Birth',
       nationality: 'Nationality',
       pob: 'Place of Birth',
     },
     FR: {
-      first_name: 'Prénom',
-      last_name: 'Nom',
+        firstName: 'Prénom',
+        lastName: 'Nom',
       dob: 'Date de naissance',
       nationality: 'Nationalité',
       pob: 'Lieu de naissance',
@@ -139,13 +139,13 @@ const getFieldValuesByNationality = (
     throw new Error(`Unsupported nationality: ${passportNationality}`);
   }
 
-  const first_name: string = findMatchingValue(
+  const firstName: string = findMatchingValue(
     extractedKeyValuePairs,
-    fieldMapping.first_name
+    fieldMapping.firstName
   );
-  const last_name: string = findMatchingValue(
+  const lastName: string = findMatchingValue(
     extractedKeyValuePairs,
-    fieldMapping.last_name
+    fieldMapping.lastName
   );
   const dob: string = findMatchingValue(
     extractedKeyValuePairs,
@@ -160,7 +160,7 @@ const getFieldValuesByNationality = (
     fieldMapping.pob
   );
 
-  return { first_name, last_name, dob, nationality, pob };
+  return { firstName, lastName, dob, nationality, pob };
 };
 
 const persistDataToDatabase = async (
@@ -174,11 +174,11 @@ const persistDataToDatabase = async (
     throw new Error(`DB_TABLE_NAME not defined or detected`);
   }
   try {
-    const { first_name, last_name, dob, nationality, pob } =
+    const { firstName, lastName, dob, nationality, pob } =
       getFieldValuesByNationality(extractedKeyValuePairs, passportNationality);
 
     const text = `INSERT INTO ${DB_TABLE_NAME}(first_name, last_name, dob, nationality, pob) VALUES($1, $2, $3, $4, $5)`;
-    const values = [first_name, last_name, dob, nationality, pob];
+    const values = [firstName, lastName, dob, nationality, pob];
 
     await client.query(text, values);
   } catch (error) {
