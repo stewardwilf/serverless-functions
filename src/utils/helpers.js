@@ -64,13 +64,15 @@ function getKeyValuePairs(keyMap, valueMap, blockMap) {
 }
 
 
-export const convertBlocksToKV = (blocks) => {
+const convertBlocksToKV = (blocks) => {
     const { keyMap, valueMap, blockMap } = parseBlocks(blocks);
     const kvs = getKeyValuePairs(keyMap, valueMap, blockMap);
     return kvs
 }
 
-export const findMatchingValue = (obj, pattern) => {
+
+
+const findMatchingValue = (obj, pattern) => {
     // Create a regex that matches the pattern (case insensitive, can handle extra spaces, and numbers in parentheses)
     const regex = new RegExp(pattern.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1').replace(/\(/g, '\\(').replace(/\)/g, '\\)').replace(/\s+/g, '\\s*'), 'i');
     
@@ -82,3 +84,6 @@ export const findMatchingValue = (obj, pattern) => {
     }
     return null;  // Return null if no match is found
 }
+
+
+module.exports = {convertBlocksToKV, findMatchingValue}

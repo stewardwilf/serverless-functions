@@ -1,108 +1,155 @@
-import AWS from 'aws-sdk-mock';
+const {
+  TextractClient,
+  AnalyzeDocumentCommand,
+} = require('@aws-sdk/client-textract');
+const { S3Client, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { Client } = require('pg');
 
-import { handler } from '../handler/invokeTextraction';
+const { handler } = require('../handler/invokeTextraction');
+const {
+  convertBlocksToKV,
+  findMatchingValue,
+} = require('../../../utils/helpers');
 
-// Mock the postgres client
-jest.mock('../../../config/db', () => ({
-  client: jest.fn().mockImplementation(() => ({
-    // Mock the tagged sql template to return a resolved value
-    sql: jest.fn().mockResolvedValue([
-      {
-        first_name: 'John',
-        last_name: 'Doe',
-        dob: '1990-01-01',
-        nationality: 'British',
-        pob: 'London',
-      },
-    ]),
-    end: jest.fn(), // Mock the end method (for closing DB connection)
-  })),
-}));
+jest.mock('@aws-sdk/client-textract');
+jest.mock('@aws-sdk/client-s3');
+jest.mock('pg');
+jest.mock('../../../utils/helpers');
 
-describe('Lambda handler', () => {
+describe('Textract Handler', () => {
+  let mockClient;
+
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear previous mocks
-    AWS.restore(); // Restore any AWS mocks if needed
+    jest.clearAllMocks();
+    mockClient = {
+      connect: jest.fn(),
+      query: jest.fn(),
+      end: jest.fn(),
+    };
+    Client.mockImplementation(() => mockClient);
   });
 
-  it('should process the S3 event and return success', async () => {
-    // Arrange: Mock the external calls
+  test('should process the S3 event and store data in the database', async () => {
+    const mockEvent = {
+      Records: [
+        {
+          s3: {
+            bucket: { name: 'test-bucket' },
+            object: { key: 'test-object-key' },
+          },
+        },
+      ],
+    };
 
     const mockTextractResponse = {
+      Blocks: [{ BlockType: 'KEY_VALUE_SET', Text: 'Sample Text' }],
       $metadata: { httpStatusCode: 200 },
-      Blocks: [
-        {
-          Id: '1',
-          BlockType: 'KEY_VALUE_SET',
-          EntityTypes: ['KEY'],
-          Text: 'Given names',
-        },
-        {
-          Id: '2',
-          BlockType: 'KEY_VALUE_SET',
-          EntityTypes: ['VALUE'],
-          Text: 'John',
-        },
-        // Add other mock blocks if needed
-      ],
     };
 
-    // Mock Textract client call
-    AWS.mock('Textract', 'analyzeDocument', mockTextractResponse);
-
-    // Mock event (S3 trigger event)
-    const event = {
-      Records: [
-        {
-          s3: {
-            bucket: { name: 'test-bucket' },
-            object: { key: 'test-file.pdf' },
-          },
-        },
-      ],
+    const mockHeadResult = {
+      Metadata: { passportnationality: 'UK' },
     };
 
-    const context = {};
+    const extractedKeyValuePairs = {
+      'Given names': 'John',
+      Surname: 'Doe',
+      'Date of birth': '1990-01-01',
+      Nationality: 'British',
+      'Place of birth': 'London',
+    };
 
-    // Act: Call the Lambda handler
-    const response = await handler(event, context);
+    S3Client.prototype.send = jest.fn().mockResolvedValue(mockHeadResult);
+    TextractClient.prototype.send = jest
+      .fn()
+      .mockResolvedValue(mockTextractResponse);
+    convertBlocksToKV.mockReturnValue(extractedKeyValuePairs);
+    findMatchingValue.mockImplementation((kvPairs, key) => kvPairs[key]);
 
-    // Assert: Check the response
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toContain(
-      'Textract analysis completed and stored for object key:'
+    process.env.DB_CONNECTION_STRING = 'postgres://user:password@localhost/db';
+    process.env.DB_TABLE_NAME = 'passport_data';
+
+    const result = await handler(mockEvent, {});
+
+    expect(S3Client.prototype.send).toHaveBeenCalledWith(
+      expect.any(HeadObjectCommand)
     );
-    // expect(AWS.Textract.analyzeDocument).toHaveBeenCalledTimes(1);
-    // expect(client().end).toHaveBeenCalledTimes(1);
+    expect(TextractClient.prototype.send).toHaveBeenCalledWith(
+      expect.any(AnalyzeDocumentCommand)
+    );
+    expect(mockClient.connect).toHaveBeenCalled();
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO passport_data'),
+      ['John', 'Doe', '1990-01-01', 'British', 'London']
+    );
+    expect(mockClient.end).toHaveBeenCalled();
+    expect(result).toEqual({
+      statusCode: 200,
+      body: JSON.stringify({
+        message: 'Textract analysis completed and stored for object key:',
+        objectKey: 'test-object-key',
+      }),
+    });
   });
 
-  it('should handle errors and return an error response', async () => {
-    // Arrange: Simulate an error in Textract
-    const mockTextractError = new Error('Textract service error');
-    AWS.mock('Textract', 'analyzeDocument', () => {
-      throw mockTextractError;
-    });
-
-    // Mock event (S3 trigger event)
-    const event = {
+  test('should handle missing nationality metadata', async () => {
+    const mockEvent = {
       Records: [
         {
           s3: {
             bucket: { name: 'test-bucket' },
-            object: { key: 'test-file.pdf' },
+            object: { key: 'test-object-key' },
           },
         },
       ],
     };
 
-    const context = {};
+    const mockHeadResult = {
+      Metadata: {},
+    };
 
-    // Act: Call the Lambda handler
-    const response = await handler(event, context);
+    S3Client.prototype.send = jest.fn().mockResolvedValue(mockHeadResult);
 
-    // Assert: Check the error handling response
-    expect(response.statusCode).toBe(500);
-    expect(response.body).toContain('Error processing S3 event');
-    // expect(client().end).toHaveBeenCalledTimes(1);
+    process.env.DB_CONNECTION_STRING = 'postgres://user:password@localhost/db';
+
+    const result = await handler(mockEvent, {});
+
+    expect(result).toEqual({
+      statusCode: 500,
+      body: JSON.stringify({
+        message: 'Error processing S3 event',
+        error: 'Nationality not specified',
+      }),
+    });
+  });
+
+  test('should handle unsupported nationality', async () => {
+    const mockEvent = {
+      Records: [
+        {
+          s3: {
+            bucket: { name: 'test-bucket' },
+            object: { key: 'test-object-key' },
+          },
+        },
+      ],
+    };
+
+    const mockHeadResult = {
+      Metadata: { passportnationality: 'UNKNOWN' },
+    };
+
+    S3Client.prototype.send = jest.fn().mockResolvedValue(mockHeadResult);
+
+    process.env.DB_CONNECTION_STRING = 'postgres://user:password@localhost/db';
+
+    const result = await handler(mockEvent, {});
+
+    expect(result).toEqual({
+      statusCode: 500,
+      body: JSON.stringify({
+        message: 'Error processing S3 event',
+        error: 'Unsupported nationality: UNKNOWN',
+      }),
+    });
   });
 });

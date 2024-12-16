@@ -110,22 +110,22 @@ const getFieldValuesByNationality = (
 } => {
   const nationalityFieldMapping: NationalityFieldMapping = {
     UK: {
-        firstName: 'Given names',
-        lastName: 'Surname',
+      firstName: 'Given names',
+      lastName: 'Surname',
       dob: 'Date of birth',
       nationality: 'Nationality',
       pob: 'Place of birth',
     },
     US: {
-        firstName: 'First Name',
-        lastName: 'Last Name',
+      firstName: 'First Name',
+      lastName: 'Last Name',
       dob: 'Date of Birth',
       nationality: 'Nationality',
       pob: 'Place of Birth',
     },
     FR: {
-        firstName: 'Prénom',
-        lastName: 'Nom',
+      firstName: 'Prénom',
+      lastName: 'Nom',
       dob: 'Date de naissance',
       nationality: 'Nationalité',
       pob: 'Lieu de naissance',

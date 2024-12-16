@@ -75,3 +75,19 @@ Check AWS CloudFormation stacks in the CloudFormation console for error messages
 **If you need to remove the deployed functions and resources**:
     `serverless remove`
     This will delete the CloudFormation stack and associated AWS resources created by serverless deploy.
+
+
+## Rationale
+**This section explains some choices/ any chances that I would make given further time**:
+
+**Choices**:
+
+
+**Future code/ repo improvements**:
+* Move param creation into infrastructure as code
+* Implement some user based logic - currently all images are just stored. This solution should receieve userId and store image in a folder, or store in metadata of image
+* Implement a dupe image upload check - currently the uploadImage lambda receieves as request to write and attempts to execute it. We should have some understanding if this user already uploaded an image
+* Extract DB client implementation from within the lambda to reuseable file
+* Refactor serverless.yaml into multiple serverless files as this directory grew, to control maintainability
+* Improved test coverage
+* Add easier local deployment and testing functionality using serverless offline/ SAM
