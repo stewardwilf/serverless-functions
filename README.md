@@ -44,7 +44,6 @@ This repository contains AWS Lambda functions managed and deployed via the [Serv
 ## Post-Deployment Verification
 **Check deployments in AWS Lambda, AWS S3, API Gateway**:
     Visit the Lambda console, S3 console & API Gateway console to confirm that the resources were created successfully.
-
     Invoke the Function:
 
     curl -X POST \
@@ -53,7 +52,7 @@ This repository contains AWS Lambda functions managed and deployed via the [Serv
     -d '{
         "imageBase64": "<YOUR_BASE64_STRING>",
         "nationality": "<YOUR_NATIONALITY>"
-      }'
+    }'
 
     Replace <ENDPOINT> with the details from your deployment.
     Replace <YOUR_BASE64_STRING>, <YOUR_IMAGE_NAME> and <YOUR_NATIONALITY> with details of image, nationality etc. use 'UK' for UK passport.
