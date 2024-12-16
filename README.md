@@ -90,3 +90,5 @@ Check AWS CloudFormation stacks in the CloudFormation console for error messages
 * Add easier local deployment and testing functionality using serverless offline/ SAM
 * convert type to module
 * convert helpers.js to typescript
+* improved CI pipeline
+* improve typing. Some functions do not have return type etc
