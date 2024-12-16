@@ -63,14 +63,11 @@ function getKeyValuePairs(keyMap, valueMap, blockMap) {
     return kvs;
 }
 
-
 const convertBlocksToKV = (blocks) => {
     const { keyMap, valueMap, blockMap } = parseBlocks(blocks);
     const kvs = getKeyValuePairs(keyMap, valueMap, blockMap);
     return kvs
 }
-
-
 
 const findMatchingValue = (obj, pattern) => {
     // Create a regex that matches the pattern (case insensitive, can handle extra spaces, and numbers in parentheses)

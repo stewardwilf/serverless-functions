@@ -78,10 +78,7 @@ Check AWS CloudFormation stacks in the CloudFormation console for error messages
 
 
 ## Rationale
-**This section explains some choices/ any chances that I would make given further time**:
-
-**Choices**:
-
+**This section explains some code changes that I would make given further time**:
 
 **Future code/ repo improvements**:
 * Move param creation into infrastructure as code
@@ -91,3 +88,5 @@ Check AWS CloudFormation stacks in the CloudFormation console for error messages
 * Refactor serverless.yaml into multiple serverless files as this directory grew, to control maintainability
 * Improved test coverage
 * Add easier local deployment and testing functionality using serverless offline/ SAM
+* convert type to module
+* convert helpers.js to typescript
