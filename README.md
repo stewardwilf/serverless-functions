@@ -77,7 +77,7 @@ Check AWS CloudFormation stacks in the CloudFormation console for error messages
     This will delete the CloudFormation stack and associated AWS resources created by serverless deploy.
 
 
-## Rationale
+## Future improvements
 **This section explains some code changes that I would make given further time**:
 
 **Future code/ repo improvements**:
